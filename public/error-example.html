@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing API Errors - Examples</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .example {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+        }
+        h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        pre {
+            background: #2d2d30;
+            color: #ce9178;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        .error {
+            border-left: 4px solid #dc3545;
+        }
+        .success {
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 API Testing Examples - How to Trigger Errors</h1>
+    
+    <div class="example error">
+        <h3>❌ Example 1: Invalid JSON</h3>
+        <p>Try sending malformed JSON to see a 400 error:</p>
+        <pre>{
+  name: "John",    // ❌ Missing quotes around property name
+  'age': 30        // ❌ Using single quotes instead of double
+}</pre>
+        <p><strong>Expected Result:</strong> Status 400 - Invalid JSON in request body</p>
+    </div>
+
+    <div class="example error">
+        <h3>❌ Example 2: Resource Not Found (404)</h3>
+        <p>Try to GET, PUT, or DELETE a user that doesn't exist:</p>
+        <pre>Method: GET
+Endpoint: users
+Resource ID: 99999</pre>
+        <p><strong>Expected Result:</strong> Status 404 - Resource not found</p>
+    </div>
+
+    <div class="example error">
+        <h3>❌ Example 3: Missing Required Fields</h3>
+        <p>Try to create a user with incomplete data:</p>
+        <pre>{
+  "name": "John Doe"
+  // Missing email and age
+}</pre>
+        <p><strong>Note:</strong> json-server is permissive and will accept this, but in real APIs this would fail</p>
+    </div>
+
+    <div class="example success">
+        <h3>✅ Example 4: Valid POST Request</h3>
+        <p>Create a new user with complete, valid JSON:</p>
+        <pre>{
+  "name": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "age": 28
+}</pre>
+        <p><strong>Expected Result:</strong> Status 201 - Resource created successfully</p>
+    </div>
+
+    <div class="example success">
+        <h3>✅ Example 5: Valid PUT Request</h3>
+        <p>Update an existing user (e.g., ID 1):</p>
+        <pre>{
+  "name": "Alice Johnson Updated",
+  "email": "alice.updated@example.com",
+  "age": 31
+}</pre>
+        <p><strong>Expected Result:</strong> Status 200 - Resource updated successfully</p>
+    </div>
+
+    <div class="example error">
+        <h3>❌ Example 6: Wrong Data Types</h3>
+        <p>Send invalid data types:</p>
+        <pre>{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "age": "thirty"    // ❌ Age should be a number, not a string
+}</pre>
+        <p><strong>Note:</strong> json-server may still accept this, but real APIs would validate types</p>
+    </div>
+
+    <div class="example success">
+        <h3>✅ Example 7: Valid Order Creation</h3>
+        <p>Create a new order:</p>
+        <pre>{
+  "userId": 1,
+  "productId": 2,
+  "quantity": 3,
+  "status": "pending"
+}</pre>
+        <p><strong>Expected Result:</strong> Status 201 - Order created</p>
+    </div>
+
+    <div class="example">
+        <h3>🎯 Testing Tips</h3>
+        <ul>
+            <li><strong>JSON Syntax:</strong> Always use double quotes for property names and string values</li>
+            <li><strong>No Trailing Commas:</strong> Don't add commas after the last property</li>
+            <li><strong>Check IDs:</strong> Make sure resource IDs exist before trying to update or delete</li>
+            <li><strong>Watch Status Codes:</strong> 
+                <ul>
+                    <li>200 = Success (OK)</li>
+                    <li>201 = Created</li>
+                    <li>400 = Bad Request (invalid data)</li>
+                    <li>404 = Not Found</li>
+                    <li>500 = Server Error</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <p style="text-align: center; margin-top: 40px;">
+        <a href="/" style="color: #667eea; text-decoration: none; font-weight: bold;">← Back to Training Interface</a>
+    </p>
+</body>
+</html>

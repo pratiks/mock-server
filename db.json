@@ -1,0 +1,74 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "age": 30
+    },
+    {
+      "id": "2",
+      "name": "Bob Smith",
+      "email": "bob@example.com",
+      "age": 25
+    },
+    {
+      "id": "3",
+      "name": "Charlie Brown",
+      "email": "charlie@example.com",
+      "age": 35
+    },
+    {
+      "id": "3d9b",
+      "name": "Charlie",
+      "email": "TEst",
+      "age": 4
+    },
+    {
+      "id": "3ee4"
+    }
+  ],
+  "products": [
+    {
+      "id": "1",
+      "name": "Laptop",
+      "price": 1000,
+      "category": "Electronics"
+    },
+    {
+      "id": "2",
+      "name": "Phone",
+      "price": 500,
+      "category": "Electronics"
+    },
+    {
+      "id": "3",
+      "name": "Book",
+      "price": 20,
+      "category": "Education"
+    }
+  ],
+  "orders": [
+    {
+      "id": "1",
+      "userId": 1,
+      "productId": 1,
+      "quantity": 1,
+      "status": "pending"
+    },
+    {
+      "id": "2",
+      "userId": 2,
+      "productId": 2,
+      "quantity": 2,
+      "status": "shipped"
+    },
+    {
+      "id": "3",
+      "userId": 3,
+      "productId": 3,
+      "quantity": 1,
+      "status": "delivered"
+    }
+  ]
+}
