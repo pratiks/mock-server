@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Modules - API Training</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Learning Modules</h1>
+            <p class="subtitle">Master REST APIs through hands-on practice</p>
+            <a href="index.html" class="btn btn-secondary" style="margin-top: 10px;">← Back to API Tester</a>
+        </header>
+
+        <div class="learning-intro">
+            <p>Welcome to the interactive learning center! Choose any module below to start learning about APIs at your own pace. Each module contains detailed explanations, real-world examples, and hands-on practice exercises.</p>
+        </div>
+
+        <!-- Learning Modules Grid -->
+        <div class="modules-grid">
+            <!-- Introduction Module -->
+            <div class="module-card" data-module="intro">
+                <div class="module-icon">🌟</div>
+                <h3>Introduction to APIs</h3>
+                <p>Learn what APIs are and why they're important in modern software development</p>
+                <button class="btn btn-primary module-btn">Start Learning</button>
+            </div>
+
+            <!-- GET Module -->
+            <div class="module-card" data-module="get">
+                <div class="module-icon">📖</div>
+                <h3>GET - Reading Data</h3>
+                <p>Learn how to retrieve and read data from the server safely</p>
+                <button class="btn btn-primary module-btn">Start Learning</button>
+            </div>
+
+            <!-- POST Module -->
+            <div class="module-card" data-module="post">
+                <div class="module-icon">✨</div>
+                <h3>POST - Creating Data</h3>
+                <p>Discover how to create new records and send data to the server</p>
+                <button class="btn btn-primary module-btn">Start Learning</button>
+            </div>
+
+            <!-- PUT Module -->
+            <div class="module-card" data-module="put">
+                <div class="module-icon">✏️</div>
+                <h3>PUT - Updating Data</h3>
+                <p>Master the art of updating and modifying existing records</p>
+                <button class="btn btn-primary module-btn">Start Learning</button>
+            </div>
+
+            <!-- DELETE Module -->
+            <div class="module-card" data-module="delete">
+                <div class="module-icon">🗑️</div>
+                <h3>DELETE - Removing Data</h3>
+                <p>Learn how to safely remove records from the server</p>
+                <button class="btn btn-primary module-btn">Start Learning</button>
+            </div>
+
+            <!-- Status Codes Module -->
+            <div class="module-card" data-module="status">
+                <div class="module-icon">🚦</div>
+                <h3>HTTP Status Codes</h3>
+                <p>Understand what different status codes mean and how to handle them</p>
+                <button class="btn btn-primary module-btn">Start Learning</button>
+            </div>
+
+            <!-- JSON Module -->
+            <div class="module-card" data-module="json">
+                <div class="module-icon">📋</div>
+                <h3>Working with JSON</h3>
+                <p>Master JSON syntax and learn to structure your API data correctly</p>
+                <button class="btn btn-primary module-btn">Start Learning</button>
+            </div>
+
+            <!-- Error Handling Module -->
+            <div class="module-card" data-module="errors">
+                <div class="module-icon">🔧</div>
+                <h3>Handling Errors</h3>
+                <p>Learn how to identify and fix common errors</p>
+                <button class="btn btn-primary module-btn">Start Learning</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Module Content Viewer -->
+    <div id="moduleViewer" class="module-viewer" style="display: none;">
+        <div class="module-viewer-content">
+            <button id="backToModules" class="back-btn">← Back to Modules</button>
+            <div id="moduleContent"></div>
+            <div class="module-practice">
+                <h3>🎯 Try It Yourself</h3>
+                <p id="modulePracticeText"></p>
+                <a href="index.html" id="tryModule" class="btn btn-success" style="display: inline-block; text-decoration: none; text-align: center;">Go to API Tester</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="learning.js"></script>
+</body>
+</html>

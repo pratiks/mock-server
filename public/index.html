@@ -11,16 +11,17 @@
         <header>
             <h1>🎓 API Training Workshop</h1>
             <p class="subtitle">Learn how REST APIs work by interacting with real data</p>
+            <a href="learning.html" target="_blank" rel="noopener noreferrer" class="btn btn-success" style="margin-top: 10px; display: inline-block; text-decoration: none;">📚 Learning Modules</a>
         </header>
 
         <div class="info-banner">
-            <h3>📚 What are APIs?</h3>
+            <h3>📚 What are APIs? <span class="help-icon" data-tooltip="api-intro">?</span></h3>
             <p>APIs (Application Programming Interfaces) allow different applications to communicate. REST APIs use HTTP methods to perform operations on data:</p>
             <ul>
-                <li><strong>GET</strong> - Retrieve data from the server</li>
-                <li><strong>POST</strong> - Create new data on the server</li>
-                <li><strong>PUT</strong> - Update existing data on the server</li>
-                <li><strong>DELETE</strong> - Remove data from the server</li>
+                <li><strong>GET</strong> <span class="help-icon" data-tooltip="http-get">?</span> - Retrieve data from the server</li>
+                <li><strong>POST</strong> <span class="help-icon" data-tooltip="http-post">?</span> - Create new data on the server</li>
+                <li><strong>PUT</strong> <span class="help-icon" data-tooltip="http-put">?</span> - Update existing data on the server</li>
+                <li><strong>DELETE</strong> <span class="help-icon" data-tooltip="http-delete">?</span> - Remove data from the server</li>
             </ul>
         </div>
 
@@ -48,7 +49,7 @@
             <h2>🧪 Try API Requests</h2>
             <div class="request-builder">
                 <div class="form-row">
-                    <label for="method">HTTP Method:</label>
+                    <label for="method">HTTP Method: <span class="help-icon" data-tooltip="http-method">?</span></label>
                     <select id="method" class="input-field">
                         <option value="GET">GET - Retrieve Data</option>
                         <option value="POST">POST - Create Data</option>
@@ -57,7 +58,7 @@
                     </select>
                 </div>
                 <div class="form-row">
-                    <label for="endpoint">Resource Type:</label>
+                    <label for="endpoint">Resource Type: <span class="help-icon" data-tooltip="resource-type">?</span></label>
                     <select id="endpoint" class="input-field">
                         <option value="users">Users</option>
                         <option value="products">Products</option>
@@ -65,15 +66,15 @@
                     </select>
                 </div>
                 <div class="form-row">
-                    <label for="endpointUrl">Endpoint URL:</label>
+                    <label for="endpointUrl">Endpoint URL: <span class="help-icon" data-tooltip="endpoint-url">?</span></label>
                     <input type="text" id="endpointUrl" class="input-field" readonly style="background-color: #f0f0f0;">
                 </div>
                 <div class="form-row" id="id-row" style="display: none;">
-                    <label for="resourceId">Resource ID:</label>
+                    <label for="resourceId">Resource ID: <span class="help-icon" data-tooltip="resource-id">?</span></label>
                     <input type="number" id="resourceId" class="input-field" placeholder="e.g., 1">
                 </div>
                 <div class="form-row" id="body-row" style="display: none;">
-                    <label for="requestBody">Request Body (JSON):</label>
+                    <label for="requestBody">Request Body (JSON): <span class="help-icon" data-tooltip="request-body">?</span></label>
                     <textarea id="requestBody" class="input-field" rows="8" placeholder='{"name": "value"}'></textarea>
                 </div>
                 <button id="sendRequest" class="btn btn-primary">Send Request</button>
@@ -83,7 +84,7 @@
             </div>
 
             <div class="response-section">
-                <h3>Response</h3>
+                <h3>Response <span class="help-icon" data-tooltip="status-code">?</span></h3>
                 <div class="response-header">
                     <span id="statusCode" class="status-badge"></span>
                     <span id="responseTime" class="response-time"></span>
@@ -169,6 +170,13 @@
             <h2 id="modalTitle">Add Item</h2>
             <div id="modalForm"></div>
         </div>
+    </div>
+
+
+
+    <!-- Tooltip Container -->
+    <div id="tooltip" class="tooltip" style="display: none;">
+        <div class="tooltip-content"></div>
     </div>
 
     <script src="app.js"></script>
