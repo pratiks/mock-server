@@ -495,20 +495,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // Setup event listeners
 function setupEventListeners() {
     document.getElementById('method').addEventListener('change', updateRequestBodyVisibility);
-    document.getElementById('endpoint').addEventListener('change', updateEndpointUrl);
+    document.getElementById('endpoint').addEventListener('change', () => {
+        updateEndpointUrl();
+        updateRequestBodyExample(); // Update body when endpoint changes
+    });
     document.getElementById('resourceId').addEventListener('input', updateEndpointUrl);
     document.getElementById('sendRequest').addEventListener('click', sendApiRequest);
     document.getElementById('refreshData').addEventListener('click', loadAllData);
     
     // Initialize endpoint URL
     updateEndpointUrl();
-    
-    // Modal close
-    document.querySelector('.close').addEventListener('click', closeModal);
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('modal');
-        if (e.target === modal) closeModal();
-    });
 }
 
 // ==================== LEARNING SYSTEM FUNCTIONS ====================
@@ -609,6 +605,17 @@ function getExampleBody() {
         orders: '{\n  "userId": 1,\n  "productId": 2,\n  "quantity": 1,\n  "status": "pending"\n}'
     };
     return examples[endpoint] || '{}';
+}
+
+// Update request body example when endpoint changes
+function updateRequestBodyExample() {
+    const method = document.getElementById('method').value;
+    const bodyTextarea = document.getElementById('requestBody');
+    
+    // Only update if method requires a body (POST or PUT)
+    if ((method === 'POST' || method === 'PUT') && bodyTextarea) {
+        bodyTextarea.value = getExampleBody();
+    }
 }
 
 // Send API request
@@ -809,14 +816,12 @@ function renderTable(tableId, data, columns, resourceType) {
     tbody.innerHTML = data.map(item => `
         <tr>
             ${columns.map(col => `<td>${item[col] !== undefined ? item[col] : ''}</td>`).join('')}
-            <td>
-                <button class="btn btn-warning" onclick="editItem('${resourceType}', ${item.id})">Edit</button>
-                <button class="btn btn-danger" onclick="deleteItem('${resourceType}', ${item.id})">Delete</button>
-            </td>
         </tr>
     `).join('');
 }
 
+// ==================== MODAL FUNCTIONS (DISABLED - Using API Tester Instead) ====================
+/*
 // Show add form
 function showAddForm(resourceType) {
     console.log('\\n=== showAddForm called for:', resourceType);
@@ -1299,4 +1304,5 @@ function getFormData(resourceType) {
 // Close modal
 function closeModal() {
     document.getElementById('modal').style.display = 'none';
-}
+}*/
+// ==================== END MODAL FUNCTIONS ====================
