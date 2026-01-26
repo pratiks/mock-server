@@ -430,7 +430,7 @@ const OLD_LEARNING_MODULES_CONTENT = {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
-}; 
+AI}; 
 */
 // End of duplicate content to delete
 
@@ -464,11 +464,11 @@ const tooltipContent = {
     },
     'resource-type': {
         title: 'Resource Types',
-        content: 'Resources are the types of data your API manages. In this training server, we have:<br><br>• <strong>Users</strong> - People with accounts<br>• <strong>Products</strong> - Items for sale<br>• <strong>Orders</strong> - Purchase records<br><br>Each resource has its own endpoint (URL path) and can be created, read, updated, or deleted.'
+        content: 'Resources are the types of data your API manages. In this restaurant server, we have:<br><br>• <strong>Tables</strong> - Dining areas for guests<br>• <strong>Menu Items</strong> - Dishes available to order<br>• <strong>Orders</strong> - Food orders from tables<br><br>Each resource has its own endpoint (URL path) and can be created, read, updated, or deleted. Think of the API as a waiter: customers (clients) at tables make requests, the waiter (API) takes orders to the kitchen (backend), and brings back the food (response)!'
     },
     'endpoint-url': {
         title: 'Endpoint URL',
-        content: 'The endpoint URL is the specific web address where your request is sent. It combines:<br><br>1. <strong>Base URL</strong>: http://localhost:4000<br>2. <strong>Resource path</strong>: /users, /products, or /orders<br>3. <strong>ID (optional)</strong>: /users/1 for specific items<br><br>Think of it like a building address - it tells the request exactly where to go!'
+        content: 'The endpoint URL is the specific web address where your request is sent. It combines:<br><br>1. <strong>Base URL</strong>: http://localhost:4000<br>2. <strong>Resource path</strong>: /tables, /menuitems, or /orders<br>3. <strong>ID (optional)</strong>: /tables/1 for specific items<br><br>Think of it like a building address - it tells the request exactly where to go!'
     },
     'resource-id': {
         title: 'Resource ID',
@@ -600,9 +600,9 @@ function updateRequestBodyVisibility() {
 function getExampleBody() {
     const endpoint = document.getElementById('endpoint').value;
     const examples = {
-        users: '{\n  "name": "John Doe",\n  "email": "john@example.com",\n  "age": 28\n}',
-        products: '{\n  "name": "Tablet",\n  "price": 300,\n  "category": "Electronics"\n}',
-        orders: '{\n  "userId": 1,\n  "productId": 2,\n  "quantity": 1,\n  "status": "pending"\n}'
+        tables: '{\n  "tableNumber": 8,\n  "section": "Main Dining",\n  "capacity": 4,\n  "status": "available"\n}',
+        menuitems: '{\n  "name": "Grilled Salmon",\n  "price": 18.99,\n  "category": "Main Course",\n  "available": true\n}',
+        orders: '{\n  "tableId": 1,\n  "menuItemId": 2,\n  "quantity": 2,\n  "status": "received",\n  "specialInstructions": "No onions"\n}'
     };
     return examples[endpoint] || '{}';
 }
@@ -769,31 +769,31 @@ function renderHistory() {
 // Load all data
 async function loadAllData() {
     await Promise.all([
-        loadUsers(),
-        loadProducts(),
+        loadTables(),
+        loadMenuItems(),
         loadOrders()
     ]);
 }
 
-// Load users
-async function loadUsers() {
+// Load tables
+async function loadTables() {
     try {
-        const response = await fetch(`${API_BASE}/users`);
-        const users = await response.json();
-        renderTable('usersTable', users, ['id', 'name', 'email', 'age'], 'users');
+        const response = await fetch(`${API_BASE}/tables`);
+        const tables = await response.json();
+        renderTable('tablesTable', tables, ['id', 'tableNumber', 'section', 'capacity', 'status'], 'tables');
     } catch (error) {
-        console.error('Error loading users:', error);
+        console.error('Error loading tables:', error);
     }
 }
 
-// Load products
-async function loadProducts() {
+// Load menu items
+async function loadMenuItems() {
     try {
-        const response = await fetch(`${API_BASE}/products`);
-        const products = await response.json();
-        renderTable('productsTable', products, ['id', 'name', 'price', 'category'], 'products');
+        const response = await fetch(`${API_BASE}/menuitems`);
+        const menuitems = await response.json();
+        renderTable('menuItemsTable', menuitems, ['id', 'name', 'price', 'category', 'available'], 'menuitems');
     } catch (error) {
-        console.error('Error loading products:', error);
+        console.error('Error loading menu items:', error);
     }
 }
 
@@ -802,7 +802,7 @@ async function loadOrders() {
     try {
         const response = await fetch(`${API_BASE}/orders`);
         const orders = await response.json();
-        renderTable('ordersTable', orders, ['id', 'userId', 'productId', 'quantity', 'status'], 'orders');
+        renderTable('ordersTable', orders, ['id', 'tableId', 'menuItemId', 'quantity', 'status', 'specialInstructions'], 'orders');
     } catch (error) {
         console.error('Error loading orders:', error);
     }

@@ -56,41 +56,43 @@
 
     <div class="example error">
         <h3>❌ Example 2: Resource Not Found (404)</h3>
-        <p>Try to GET, PUT, or DELETE a user that doesn't exist:</p>
+        <p>Try to GET, PUT, or DELETE a table that doesn't exist:</p>
         <pre>Method: GET
-Endpoint: users
+Endpoint: tables
 Resource ID: 99999</pre>
         <p><strong>Expected Result:</strong> Status 404 - Resource not found</p>
     </div>
 
     <div class="example error">
         <h3>❌ Example 3: Missing Required Fields</h3>
-        <p>Try to create a user with incomplete data:</p>
+        <p>Try to create a table with incomplete data:</p>
         <pre>{
-  "name": "John Doe"
-  // Missing email and age
+  "tableNumber": 10
+  // Missing section, capacity, and status
 }</pre>
-        <p><strong>Note:</strong> json-server is permissive and will accept this, but in real APIs this would fail</p>
+        <p><strong>Expected Result:</strong> Status 400 - Validation Error with details about missing fields</p>
     </div>
 
     <div class="example success">
         <h3>✅ Example 4: Valid POST Request</h3>
-        <p>Create a new user with complete, valid JSON:</p>
+        <p>Create a new table with complete, valid JSON:</p>
         <pre>{
-  "name": "Jane Smith",
-  "email": "jane.smith@example.com",
-  "age": 28
+  "tableNumber": 15,
+  "section": "Patio",
+  "capacity": 4,
+  "status": "available"
 }</pre>
         <p><strong>Expected Result:</strong> Status 201 - Resource created successfully</p>
     </div>
 
     <div class="example success">
         <h3>✅ Example 5: Valid PUT Request</h3>
-        <p>Update an existing user (e.g., ID 1):</p>
+        <p>Update an existing table (e.g., ID 1):</p>
         <pre>{
-  "name": "Alice Johnson Updated",
-  "email": "alice.updated@example.com",
-  "age": 31
+  "tableNumber": 5,
+  "section": "Main Dining",
+  "capacity": 6,
+  "status": "occupied"
 }</pre>
         <p><strong>Expected Result:</strong> Status 200 - Resource updated successfully</p>
     </div>
@@ -99,21 +101,23 @@ Resource ID: 99999</pre>
         <h3>❌ Example 6: Wrong Data Types</h3>
         <p>Send invalid data types:</p>
         <pre>{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "age": "thirty"    // ❌ Age should be a number, not a string
+  "tableNumber": 8,
+  "section": "Patio",
+  "capacity": "four",    // ❌ Capacity should be a number, not a string
+  "status": "available"
 }</pre>
-        <p><strong>Note:</strong> json-server may still accept this, but real APIs would validate types</p>
+        <p><strong>Expected Result:</strong> Status 400 - Validation Error indicating capacity must be a number</p>
     </div>
 
     <div class="example success">
         <h3>✅ Example 7: Valid Order Creation</h3>
         <p>Create a new order:</p>
         <pre>{
-  "userId": 1,
-  "productId": 2,
+  "tableId": 1,
+  "menuItemId": 2,
   "quantity": 3,
-  "status": "pending"
+  "status": "received",
+  "specialInstructions": "Extra sauce on the side"
 }</pre>
         <p><strong>Expected Result:</strong> Status 201 - Order created</p>
     </div>

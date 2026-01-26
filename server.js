@@ -33,47 +33,50 @@ const db = new sqlite3.Database('./database.db', (err) => {
 
 // Initialize database schema
 function initializeDatabase() {
-    // Create users table
+    // Create tables table
     db.run(`
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS tables (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL,
-            age INTEGER NOT NULL
+            tableNumber INTEGER NOT NULL,
+            section TEXT NOT NULL,
+            capacity INTEGER NOT NULL,
+            status TEXT NOT NULL
         )
     `, (err) => {
-        if (err) console.error('Error creating users table:', err.message);
-        else console.log('✓ Users table ready');
+        if (err) console.error('Error creating tables table:', err.message);
+        else console.log('✓ Tables table ready');
     });
 
-    // Create products table
+    // Create menuitems table
     db.run(`
-        CREATE TABLE IF NOT EXISTS products (
+        CREATE TABLE IF NOT EXISTS menuitems (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             price REAL NOT NULL,
-            category TEXT NOT NULL
+            category TEXT NOT NULL,
+            available INTEGER NOT NULL DEFAULT 1
         )
     `, (err) => {
-        if (err) console.error('Error creating products table:', err.message);
-        else console.log('✓ Products table ready');
+        if (err) console.error('Error creating menuitems table:', err.message);
+        else console.log('✓ MenuItems table ready');
     });
 
     // Create orders table
     db.run(`
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            userId INTEGER NOT NULL,
-            productId INTEGER NOT NULL,
+            tableId INTEGER NOT NULL,
+            menuItemId INTEGER NOT NULL,
             quantity INTEGER NOT NULL,
             status TEXT NOT NULL,
-            FOREIGN KEY (userId) REFERENCES users(id),
-            FOREIGN KEY (productId) REFERENCES products(id)
+            specialInstructions TEXT,
+            FOREIGN KEY (tableId) REFERENCES tables(id),
+            FOREIGN KEY (menuItemId) REFERENCES menuitems(id)
         )
     `, (err) => {
         if (err) console.error('Error creating orders table:', err.message);
         else console.log('✓ Orders table ready');
-        
+
         // Check if tables are empty and seed data
         seedDataIfEmpty();
     });
@@ -81,181 +84,237 @@ function initializeDatabase() {
 
 // Seed initial data if tables are empty
 function seedDataIfEmpty() {
-    db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
+    db.get('SELECT COUNT(*) as count FROM tables', (err, row) => {
         if (err) {
-            console.error('Error checking users:', err.message);
+            console.error('Error checking tables:', err.message);
             return;
         }
-        
+
         if (row.count === 0) {
             console.log('Seeding initial data...');
-            
-            // Seed users
-            const users = [
-                ['Alice Johnson', 'alice@example.com', 28],
-                ['Bob Smith', 'bob@example.com', 34],
-                ['Charlie Brown', 'charlie@example.com', 22]
+
+            // Seed tables
+            const tables = [
+                [5, 'Patio', 4, 'occupied'],
+                [12, 'Main Dining', 6, 'available'],
+                [3, 'Bar Area', 2, 'reserved']
             ];
-            
-            const userStmt = db.prepare('INSERT INTO users (name, email, age) VALUES (?, ?, ?)');
-            users.forEach(user => userStmt.run(user));
-            userStmt.finalize();
-            
-            // Seed products
-            const products = [
-                ['Laptop', 999.99, 'Electronics'],
-                ['Desk Chair', 299.99, 'Furniture'],
-                ['Coffee Maker', 79.99, 'Appliances']
+
+            const tableStmt = db.prepare('INSERT INTO tables (tableNumber, section, capacity, status) VALUES (?, ?, ?, ?)');
+            tables.forEach(table => tableStmt.run(table));
+            tableStmt.finalize();
+
+            // Seed menuitems
+            const menuitems = [
+                ['Margherita Pizza', 12.99, 'Main Course', 1],
+                ['Caesar Salad', 8.99, 'Appetizer', 1],
+                ['Tiramisu', 7.50, 'Dessert', 0]
             ];
-            
-            const productStmt = db.prepare('INSERT INTO products (name, price, category) VALUES (?, ?, ?)');
-            products.forEach(product => productStmt.run(product));
-            productStmt.finalize();
-            
+
+            const menuStmt = db.prepare('INSERT INTO menuitems (name, price, category, available) VALUES (?, ?, ?, ?)');
+            menuitems.forEach(item => menuStmt.run(item));
+            menuStmt.finalize();
+
             // Seed orders
             const orders = [
-                [1, 1, 1, 'delivered'],
-                [2, 2, 2, 'pending'],
-                [3, 3, 1, 'shipped']
+                [1, 1, 2, 'preparing', 'No olives'],
+                [2, 2, 1, 'received', null],
+                [1, 3, 3, 'served', 'Extra whipped cream']
             ];
-            
-            const orderStmt = db.prepare('INSERT INTO orders (userId, productId, quantity, status) VALUES (?, ?, ?, ?)');
+
+            const orderStmt = db.prepare('INSERT INTO orders (tableId, menuItemId, quantity, status, specialInstructions) VALUES (?, ?, ?, ?, ?)');
             orders.forEach(order => orderStmt.run(order));
             orderStmt.finalize();
-            
+
             console.log('✓ Initial data seeded');
         }
     });
 }
 
-// ==================== USERS ENDPOINTS ====================
+// ==================== VALIDATION ====================
 
-// GET all users
-app.get('/users', (req, res) => {
-    db.all('SELECT * FROM users', [], (err, rows) => {
+// Validation constants
+const VALID_TABLE_STATUSES = ['available', 'occupied', 'reserved', 'cleaning'];
+const VALID_ORDER_STATUSES = ['received', 'preparing', 'ready', 'served', 'cancelled'];
+const VALID_MENU_CATEGORIES = ['Appetizer', 'Main Course', 'Dessert', 'Beverage', 'Side'];
+const VALID_SECTIONS = ['Main Dining', 'Patio', 'Bar Area', 'Private Room'];
+
+function validateTable(data) {
+    const errors = [];
+    if (!data.tableNumber || typeof data.tableNumber !== 'number' || data.tableNumber < 1) {
+        errors.push('tableNumber must be a positive number');
+    }
+    if (!data.section || !VALID_SECTIONS.includes(data.section)) {
+        errors.push(`section must be one of: ${VALID_SECTIONS.join(', ')}`);
+    }
+    if (!data.capacity || typeof data.capacity !== 'number' || data.capacity < 1 || data.capacity > 12) {
+        errors.push('capacity must be between 1 and 12');
+    }
+    if (!data.status || !VALID_TABLE_STATUSES.includes(data.status)) {
+        errors.push(`status must be one of: ${VALID_TABLE_STATUSES.join(', ')}`);
+    }
+    return errors;
+}
+
+function validateMenuItem(data) {
+    const errors = [];
+    if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
+        errors.push('name is required and must be a non-empty string');
+    }
+    if (data.name && data.name.length > 100) {
+        errors.push('name must be 100 characters or less');
+    }
+    if (data.price === undefined || typeof data.price !== 'number' || data.price < 0 || data.price > 999.99) {
+        errors.push('price must be a number between 0 and 999.99');
+    }
+    if (!data.category || !VALID_MENU_CATEGORIES.includes(data.category)) {
+        errors.push(`category must be one of: ${VALID_MENU_CATEGORIES.join(', ')}`);
+    }
+    return errors;
+}
+
+function validateOrder(data) {
+    const errors = [];
+    if (!data.tableId || typeof data.tableId !== 'number' || data.tableId < 1) {
+        errors.push('tableId must be a positive number');
+    }
+    if (!data.menuItemId || typeof data.menuItemId !== 'number' || data.menuItemId < 1) {
+        errors.push('menuItemId must be a positive number');
+    }
+    if (!data.quantity || typeof data.quantity !== 'number' || data.quantity < 1 || data.quantity > 20) {
+        errors.push('quantity must be between 1 and 20');
+    }
+    if (!data.status || !VALID_ORDER_STATUSES.includes(data.status)) {
+        errors.push(`status must be one of: ${VALID_ORDER_STATUSES.join(', ')}`);
+    }
+    if (data.specialInstructions && data.specialInstructions.length > 200) {
+        errors.push('specialInstructions must be 200 characters or less');
+    }
+    return errors;
+}
+
+// ==================== TABLES ENDPOINTS ====================
+
+// GET all tables
+app.get('/tables', (req, res) => {
+    db.all('SELECT * FROM tables', [], (err, rows) => {
         if (err) {
-            console.error('Error fetching users:', err.message);
+            console.error('Error fetching tables:', err.message);
             return res.status(500).json({ error: err.message });
         }
         res.json(rows);
     });
 });
 
-// GET single user
-app.get('/users/:id', (req, res) => {
-    db.get('SELECT * FROM users WHERE id = ?', [req.params.id], (err, row) => {
+// GET single table
+app.get('/tables/:id', (req, res) => {
+    db.get('SELECT * FROM tables WHERE id = ?', [req.params.id], (err, row) => {
         if (err) {
-            console.error('Error fetching user:', err.message);
+            console.error('Error fetching table:', err.message);
             return res.status(500).json({ error: err.message });
         }
         if (!row) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: 'Table not found' });
         }
         res.json(row);
     });
 });
 
-// POST new user
-app.post('/users', (req, res) => {
-    console.log('\n=== POST /users ===');
+// POST new table
+app.post('/tables', (req, res) => {
+    console.log('\n=== POST /tables ===');
     console.log('Request body:', req.body);
-    
-    const { name, email, age } = req.body;
-    
+
+    const { tableNumber, section, capacity, status } = req.body;
+
     // Validation
-    if (!name || !email || !age) {
-        console.error('Validation failed: Missing fields');
-        return res.status(400).json({ 
-            error: 'Validation Error', 
-            details: 'name, email, and age are required' 
+    const errors = validateTable(req.body);
+    if (errors.length > 0) {
+        console.error('Validation failed:', errors);
+        return res.status(400).json({
+            error: 'Validation Error',
+            details: errors
         });
     }
-    
-    if (typeof age !== 'number' || age <= 0) {
-        console.error('Validation failed: Invalid age');
-        return res.status(400).json({ 
-            error: 'Validation Error', 
-            details: 'age must be a positive number' 
-        });
-    }
-    
+
     db.run(
-        'INSERT INTO users (name, email, age) VALUES (?, ?, ?)',
-        [name, email, age],
+        'INSERT INTO tables (tableNumber, section, capacity, status) VALUES (?, ?, ?, ?)',
+        [tableNumber, section, capacity, status],
         function(err) {
             if (err) {
-                console.error('Error inserting user:', err.message);
+                console.error('Error inserting table:', err.message);
                 return res.status(500).json({ error: err.message });
             }
-            
-            const newUser = { id: this.lastID, name, email, age };
-            console.log('✓ User created:', newUser);
-            res.status(201).json(newUser);
+
+            const newTable = { id: this.lastID, tableNumber, section, capacity, status };
+            console.log('✓ Table created:', newTable);
+            res.status(201).json(newTable);
         }
     );
 });
 
-// PUT update user
-app.put('/users/:id', (req, res) => {
-    console.log('\n=== PUT /users/:id ===');
+// PUT update table
+app.put('/tables/:id', (req, res) => {
+    console.log('\n=== PUT /tables/:id ===');
     console.log('Request body:', req.body);
-    
-    const { name, email, age } = req.body;
+
+    const { tableNumber, section, capacity, status } = req.body;
     const { id } = req.params;
-    
+
     // Validation
-    if (!name || !email || !age) {
-        return res.status(400).json({ 
-            error: 'Validation Error', 
-            details: 'name, email, and age are required' 
+    const errors = validateTable(req.body);
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validation Error',
+            details: errors
         });
     }
-    
+
     db.run(
-        'UPDATE users SET name = ?, email = ?, age = ? WHERE id = ?',
-        [name, email, age, id],
+        'UPDATE tables SET tableNumber = ?, section = ?, capacity = ?, status = ? WHERE id = ?',
+        [tableNumber, section, capacity, status, id],
         function(err) {
             if (err) {
-                console.error('Error updating user:', err.message);
+                console.error('Error updating table:', err.message);
                 return res.status(500).json({ error: err.message });
             }
-            
+
             if (this.changes === 0) {
-                return res.status(404).json({ error: 'User not found' });
+                return res.status(404).json({ error: 'Table not found' });
             }
-            
-            const updatedUser = { id: parseInt(id), name, email, age };
-            console.log('✓ User updated:', updatedUser);
-            res.json(updatedUser);
+
+            const updatedTable = { id: parseInt(id), tableNumber, section, capacity, status };
+            console.log('✓ Table updated:', updatedTable);
+            res.json(updatedTable);
         }
     );
 });
 
-// DELETE user
-app.delete('/users/:id', (req, res) => {
-    console.log('\n=== DELETE /users/:id ===');
-    console.log('User ID:', req.params.id);
-    
-    db.run('DELETE FROM users WHERE id = ?', [req.params.id], function(err) {
+// DELETE table
+app.delete('/tables/:id', (req, res) => {
+    console.log('\n=== DELETE /tables/:id ===');
+    console.log('Table ID:', req.params.id);
+
+    db.run('DELETE FROM tables WHERE id = ?', [req.params.id], function(err) {
         if (err) {
-            console.error('Error deleting user:', err.message);
+            console.error('Error deleting table:', err.message);
             return res.status(500).json({ error: err.message });
         }
-        
+
         if (this.changes === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: 'Table not found' });
         }
-        
-        console.log('✓ User deleted');
-        res.json({ message: 'User deleted successfully' });
+
+        console.log('✓ Table deleted');
+        res.json({ message: 'Table deleted successfully' });
     });
 });
 
-// ==================== PRODUCTS ENDPOINTS ====================
+// ==================== MENUITEMS ENDPOINTS ====================
 
-// GET all products
-app.get('/products', (req, res) => {
-    db.all('SELECT * FROM products', [], (err, rows) => {
+// GET all menuitems
+app.get('/menuitems', (req, res) => {
+    db.all('SELECT * FROM menuitems', [], (err, rows) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
@@ -263,98 +322,104 @@ app.get('/products', (req, res) => {
     });
 });
 
-// GET single product
-app.get('/products/:id', (req, res) => {
-    db.get('SELECT * FROM products WHERE id = ?', [req.params.id], (err, row) => {
+// GET single menuitem
+app.get('/menuitems/:id', (req, res) => {
+    db.get('SELECT * FROM menuitems WHERE id = ?', [req.params.id], (err, row) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
         if (!row) {
-            return res.status(404).json({ error: 'Product not found' });
+            return res.status(404).json({ error: 'Menu item not found' });
         }
         res.json(row);
     });
 });
 
-// POST new product
-app.post('/products', (req, res) => {
-    console.log('\n=== POST /products ===');
+// POST new menuitem
+app.post('/menuitems', (req, res) => {
+    console.log('\n=== POST /menuitems ===');
     console.log('Request body:', req.body);
-    
-    const { name, price, category } = req.body;
-    
-    if (!name || !price || !category) {
-        return res.status(400).json({ 
-            error: 'Validation Error', 
-            details: 'name, price, and category are required' 
+
+    const { name, price, category, available } = req.body;
+    const isAvailable = available !== undefined ? (available ? 1 : 0) : 1;
+
+    // Validation
+    const errors = validateMenuItem(req.body);
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validation Error',
+            details: errors
         });
     }
-    
+
     db.run(
-        'INSERT INTO products (name, price, category) VALUES (?, ?, ?)',
-        [name, price, category],
+        'INSERT INTO menuitems (name, price, category, available) VALUES (?, ?, ?, ?)',
+        [name, price, category, isAvailable],
         function(err) {
             if (err) {
-                console.error('Error inserting product:', err.message);
+                console.error('Error inserting menu item:', err.message);
                 return res.status(500).json({ error: err.message });
             }
-            
-            const newProduct = { id: this.lastID, name, price, category };
-            console.log('✓ Product created:', newProduct);
-            res.status(201).json(newProduct);
+
+            const newMenuItem = { id: this.lastID, name, price, category, available: isAvailable };
+            console.log('✓ Menu item created:', newMenuItem);
+            res.status(201).json(newMenuItem);
         }
     );
 });
 
-// PUT update product
-app.put('/products/:id', (req, res) => {
-    console.log('\n=== PUT /products/:id ===');
+// PUT update menuitem
+app.put('/menuitems/:id', (req, res) => {
+    console.log('\n=== PUT /menuitems/:id ===');
     console.log('Request body:', req.body);
-    
-    const { name, price, category } = req.body;
+
+    const { name, price, category, available } = req.body;
     const { id } = req.params;
-    
-    if (!name || !price || !category) {
-        return res.status(400).json({ 
-            error: 'Validation Error', 
-            details: 'name, price, and category are required' 
+    const isAvailable = available !== undefined ? (available ? 1 : 0) : 1;
+
+    // Validation
+    const errors = validateMenuItem(req.body);
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validation Error',
+            details: errors
         });
     }
-    
+
     db.run(
-        'UPDATE products SET name = ?, price = ?, category = ? WHERE id = ?',
-        [name, price, category, id],
+        'UPDATE menuitems SET name = ?, price = ?, category = ?, available = ? WHERE id = ?',
+        [name, price, category, isAvailable, id],
         function(err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
-            
+
             if (this.changes === 0) {
-                return res.status(404).json({ error: 'Product not found' });
+                return res.status(404).json({ error: 'Menu item not found' });
             }
-            
-            const updatedProduct = { id: parseInt(id), name, price, category };
-            console.log('✓ Product updated:', updatedProduct);
-            res.json(updatedProduct);
+
+            const updatedMenuItem = { id: parseInt(id), name, price, category, available: isAvailable };
+            console.log('✓ Menu item updated:', updatedMenuItem);
+            res.json(updatedMenuItem);
         }
     );
 });
 
-// DELETE product
-app.delete('/products/:id', (req, res) => {
-    console.log('\n=== DELETE /products/:id ===');
-    
-    db.run('DELETE FROM products WHERE id = ?', [req.params.id], function(err) {
+// DELETE menuitem
+app.delete('/menuitems/:id', (req, res) => {
+    console.log('\n=== DELETE /menuitems/:id ===');
+
+    db.run('DELETE FROM menuitems WHERE id = ?', [req.params.id], function(err) {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
-        
+
         if (this.changes === 0) {
-            return res.status(404).json({ error: 'Product not found' });
+            return res.status(404).json({ error: 'Menu item not found' });
         }
-        
-        console.log('✓ Product deleted');
-        res.json({ message: 'Product deleted successfully' });
+
+        console.log('✓ Menu item deleted');
+        res.json({ message: 'Menu item deleted successfully' });
     });
 });
 
@@ -387,26 +452,28 @@ app.get('/orders/:id', (req, res) => {
 app.post('/orders', (req, res) => {
     console.log('\n=== POST /orders ===');
     console.log('Request body:', req.body);
-    
-    const { userId, productId, quantity, status } = req.body;
-    
-    if (!userId || !productId || !quantity || !status) {
-        return res.status(400).json({ 
-            error: 'Validation Error', 
-            details: 'userId, productId, quantity, and status are required' 
+
+    const { tableId, menuItemId, quantity, status, specialInstructions } = req.body;
+
+    // Validation
+    const errors = validateOrder(req.body);
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validation Error',
+            details: errors
         });
     }
-    
+
     db.run(
-        'INSERT INTO orders (userId, productId, quantity, status) VALUES (?, ?, ?, ?)',
-        [userId, productId, quantity, status],
+        'INSERT INTO orders (tableId, menuItemId, quantity, status, specialInstructions) VALUES (?, ?, ?, ?, ?)',
+        [tableId, menuItemId, quantity, status, specialInstructions || null],
         function(err) {
             if (err) {
                 console.error('Error inserting order:', err.message);
                 return res.status(500).json({ error: err.message });
             }
-            
-            const newOrder = { id: this.lastID, userId, productId, quantity, status };
+
+            const newOrder = { id: this.lastID, tableId, menuItemId, quantity, status, specialInstructions };
             console.log('✓ Order created:', newOrder);
             res.status(201).json(newOrder);
         }
@@ -417,30 +484,32 @@ app.post('/orders', (req, res) => {
 app.put('/orders/:id', (req, res) => {
     console.log('\n=== PUT /orders/:id ===');
     console.log('Request body:', req.body);
-    
-    const { userId, productId, quantity, status } = req.body;
+
+    const { tableId, menuItemId, quantity, status, specialInstructions } = req.body;
     const { id } = req.params;
-    
-    if (!userId || !productId || !quantity || !status) {
-        return res.status(400).json({ 
-            error: 'Validation Error', 
-            details: 'userId, productId, quantity, and status are required' 
+
+    // Validation
+    const errors = validateOrder(req.body);
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validation Error',
+            details: errors
         });
     }
-    
+
     db.run(
-        'UPDATE orders SET userId = ?, productId = ?, quantity = ? WHERE id = ?',
-        [userId, productId, quantity, status, id],
+        'UPDATE orders SET tableId = ?, menuItemId = ?, quantity = ?, status = ?, specialInstructions = ? WHERE id = ?',
+        [tableId, menuItemId, quantity, status, specialInstructions || null, id],
         function(err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
-            
+
             if (this.changes === 0) {
                 return res.status(404).json({ error: 'Order not found' });
             }
-            
-            const updatedOrder = { id: parseInt(id), userId, productId, quantity, status };
+
+            const updatedOrder = { id: parseInt(id), tableId, menuItemId, quantity, status, specialInstructions };
             console.log('✓ Order updated:', updatedOrder);
             res.json(updatedOrder);
         }
@@ -465,18 +534,23 @@ app.delete('/orders/:id', (req, res) => {
     });
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`\n✓ API Training Server running on http://localhost:${PORT}`);
-    console.log(`✓ Using SQLite database: ./database.db`);
-    console.log(`\nAvailable endpoints:`);
-    console.log(`  GET    /users`);
-    console.log(`  GET    /users/:id`);
-    console.log(`  POST   /users`);
-    console.log(`  PUT    /users/:id`);
-    console.log(`  DELETE /users/:id`);
-    console.log(`  (Same pattern for /products and /orders)\n`);
-});
+// Export app for testing
+module.exports = app;
+
+// Only start server if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`\n✓ Restaurant API Training Server running on http://localhost:${PORT}`);
+        console.log(`✓ Using SQLite database: ./database.db`);
+        console.log(`\nAvailable endpoints:`);
+        console.log(`  GET    /tables`);
+        console.log(`  GET    /tables/:id`);
+        console.log(`  POST   /tables`);
+        console.log(`  PUT    /tables/:id`);
+        console.log(`  DELETE /tables/:id`);
+        console.log(`  (Same pattern for /menuitems and /orders)\n`);
+    });
+}
 
 // Graceful shutdown
 process.on('SIGINT', () => {
